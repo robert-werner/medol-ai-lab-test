@@ -1,0 +1,17 @@
+fastapi[all]
+pytest
+minio-async
+SQLAlchemy
+ruff
+black
+wemake-python-styleguide
+alembic
+pytest-asyncio
+pytest-mock-resources
+asyncpg
+python-decouple
+pyjwt[crypto]
+python-jose[cryptography]
+passlib
+python-multipart
+uvicorn
