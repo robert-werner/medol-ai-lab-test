@@ -1,0 +1,8 @@
+.vscode
+.idea
+__pycache__
+*.egg-info
+build
+data
+environment.yml
+activate_env.sh
