@@ -1,7 +1,7 @@
 FROM python:3.12-slim
 
 ADD . /opt/medol
-=
+
 
 RUN cd /opt/medol && pip install --no-cache-dir -e .
 
