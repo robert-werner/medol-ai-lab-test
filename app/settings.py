@@ -1,10 +1,10 @@
-from datetime import timedelta, datetime
-from typing import Any, Optional, AsyncGenerator
+from datetime import datetime, timedelta
+from typing import Any, AsyncGenerator, Optional
 
-from decouple import config, UndefinedValueError
+from decouple import UndefinedValueError, config
 from fastapi import Depends, HTTPException
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from jose import jwt, JWTError
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from jose import JWTError, jwt
 from passlib.context import CryptContext
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
@@ -25,7 +25,9 @@ class Settings(object):  # noqa: WPS230
         self.db_port = self.get_setting("DB_PORT", "6432")
         self.secret_key = self.get_setting("SECRET_KEY", "medol")
         self.algorithm = self.get_setting("ALGORITHM", "HS256")
-        self.access_token_expire_minutes = self.get_setting("ACCESS_TOKEN_EXPIRE_MINUTES", 30)
+        self.access_token_expire_minutes = self.get_setting(
+            "ACCESS_TOKEN_EXPIRE_MINUTES", 30
+        )
 
     def get_setting(self, name: str, default: Any) -> Any:
         """Get setting.
@@ -41,8 +43,6 @@ class Settings(object):  # noqa: WPS230
             setting = default
 
         return setting
-
-
 
 
 settings = Settings()
@@ -76,17 +76,12 @@ def get_db_string(
     return "".join(["postgresql+asyncpg://", credentials, "@", address])
 
 
-
-
 security = HTTPBearer()
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 engine = create_async_engine(get_db_string(), echo=True)
 async_session_local = sessionmaker(
-    bind=engine,
-    class_=AsyncSession,
-    expire_on_commit=False
+    bind=engine, class_=AsyncSession, expire_on_commit=False
 )
-
 
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
@@ -105,8 +100,8 @@ async def get_db() -> AsyncGenerator[Any, Any]:
 
 
 async def get_current_user(
-        credentials: HTTPAuthorizationCredentials = Depends(security),
-        db: AsyncSession = Depends(get_db)
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    db: AsyncSession = Depends(get_db),
 ):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -116,7 +111,9 @@ async def get_current_user(
 
     try:
         token = credentials.credentials
-        payload = jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
+        payload = jwt.decode(
+            token, settings.secret_key, algorithms=[settings.algorithm]
+        )
         username: str = payload.get("sub")
         if username is None:
             raise credentials_exception
