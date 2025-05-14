@@ -12,6 +12,15 @@ services:
       - "POSTGRESQL_PASSWORD=${DB_PASSWORD}"
     volumes:
       - metadata:/bitnami/postgresql
+  storage:
+    image: bitnami/minio:latest
+    env_file:
+      - .env
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_storage:/bitnami/minio/data
   frontend:
     env_file:
       - .env
@@ -22,3 +31,4 @@ services:
 
 volumes:
   metadata:
+  minio_storage:

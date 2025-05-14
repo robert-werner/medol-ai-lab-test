@@ -1,6 +1,5 @@
 fastapi[all]
 pytest
-minio-async
 SQLAlchemy
 ruff
 black
@@ -15,3 +14,6 @@ python-jose[cryptography]
 passlib
 python-multipart
 uvicorn
+minio
+s3fs
+bcrypt==4.0.1

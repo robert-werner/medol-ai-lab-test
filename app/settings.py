@@ -28,6 +28,8 @@ class Settings(object):  # noqa: WPS230
         self.access_token_expire_minutes = self.get_setting(
             "ACCESS_TOKEN_EXPIRE_MINUTES", 30
         )
+        self.minio_secret_key = self.get_setting("MINIO_SECRET_KEY", "promedol")
+        self.minio_access_key = self.get_setting("MINIO_ACCESS_KEY", "promedol")
 
     def get_setting(self, name: str, default: Any) -> Any:
         """Get setting.
