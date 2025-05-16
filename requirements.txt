@@ -5,8 +5,7 @@ ruff
 black
 wemake-python-styleguide
 alembic
-pytest-asyncio
-pytest-mock-resources
+
 asyncpg
 python-decouple
 pyjwt[crypto]
@@ -17,3 +16,7 @@ uvicorn
 minio
 s3fs
 bcrypt==4.0.1
+pytest==8.3.3
+pytest-mock-resources==2.12.2
+httpx
+pytest-asyncio >= 0.14.0

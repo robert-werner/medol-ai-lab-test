@@ -1,7 +1,8 @@
-from sqlalchemy import String, Integer
-from sqlalchemy.orm import mapped_column, Mapped
+from sqlalchemy import String
+from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.models.orm.base import Base
+
 
 class Token(Base):
     __tablename__ = "tokens"

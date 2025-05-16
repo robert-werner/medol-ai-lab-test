@@ -1,8 +1,8 @@
+from datetime import datetime
 import json
 import logging
-import os
-from datetime import datetime
 from logging.handlers import RotatingFileHandler
+import os
 
 
 class JsonFormatter(logging.Formatter):

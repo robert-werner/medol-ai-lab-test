@@ -12,6 +12,12 @@ services:
       - "POSTGRESQL_PASSWORD=${DB_PASSWORD}"
     volumes:
       - metadata:/bitnami/postgresql
+    healthcheck:
+      test: pg_isready -U $$POSTGRESQL_USERNAME -d $$POSTGRESQL_DATABASE
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
   storage:
     image: bitnami/minio:latest
     env_file:
@@ -21,6 +27,10 @@ services:
       - "9001:9001"
     volumes:
       - minio_storage:/bitnami/minio/data
+    depends_on:
+      - meta_storage
+    healthcheck:
+      test: curl -f http://localhost:9000/minio/health/ready
   frontend:
     env_file:
       - .env
@@ -28,6 +38,8 @@ services:
       context: .
       dockerfile: Dockerfile
     network_mode: "host"
+    depends_on:
+      - storage
 
 volumes:
   metadata:

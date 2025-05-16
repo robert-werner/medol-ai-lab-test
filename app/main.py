@@ -1,20 +1,22 @@
-import uuid
 from datetime import timedelta
+import uuid
 
-from fastapi import Depends, FastAPI, Form, HTTPException, UploadFile, File, BackgroundTasks
+from fastapi import (BackgroundTasks, Depends, FastAPI, File, Form,
+                     HTTPException, UploadFile)
 from minio import Minio
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
+from starlette.responses import StreamingResponse
 
 from app.db.models.orm.base import Base
 from app.db.models.orm.file_info import FileInfo
 from app.db.models.orm.user import User
-
 from app.db.models.pydantic.token import Token
 from app.db.models.pydantic.user import UserCreate, UserResponse
-from app.settings import (create_access_token, engine, get_db, pwd_context,
-                          settings, get_current_user, async_session_local)
-from app.utils import upload_to_minio, add_file, save_temp_file
+from app.settings import (create_access_token, engine, get_current_user,
+                          get_db, pwd_context, settings)
+from app.utils import add_file, save_temp_file, upload_to_minio
 
 app = FastAPI()
 
@@ -74,7 +76,7 @@ async def upload(
     current_user: User = Depends(get_current_user)
 ):
     file_uuid = str(uuid.uuid4())
-    file_path = f"s3://medol/{file.filename}"
+    file_path = f"{file.filename}"
 
     temp_path = await save_temp_file(file)
 
@@ -86,3 +88,55 @@ async def upload(
         "id": file_uuid,
         "filename": file.filename,
     }
+
+@app.get("/download/{file_uuid}")
+async def download_file(file_uuid: str,
+                        db: AsyncSession = Depends(get_db),
+                        current_user: User = Depends(get_current_user)):
+    check_file = await db.get(FileInfo, file_uuid)
+    if not check_file:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File not found")
+
+
+    client = Minio(
+        "localhost:9000",
+        access_key=settings.minio_access_key,
+        secret_key=settings.minio_secret_key,
+        secure=False
+    )
+
+    response = client.get_object("medol", check_file.uri)
+
+    def iter_file():
+        try:
+            for chunk in response.stream(32 * 1024):  # 32KB chunks
+                yield chunk
+        finally:
+            response.close()
+            response.release_conn()
+
+    return StreamingResponse(
+        content=iter_file(),
+        media_type="application/octet-stream",
+        headers={
+            "Content-Disposition": f"attachment; filename={check_file.uri.split('/')[-1]}"
+        }
+    )
+
+@app.get("/files")
+async def files(db: AsyncSession = Depends(get_db),
+                current_user: User = Depends(get_current_user)):
+    query = await db.execute(select(FileInfo))
+    result = []
+    for row in query.scalars().all():
+        result.append(
+            {
+                "id": row.id,
+                "filename": row.uri
+            }
+        )
+    return result
+
+@app.get("/health")
+def health_check():
+    return {"status": "ok"}
